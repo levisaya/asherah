@@ -8,9 +8,6 @@ on:
 
 jobs:
   secure-memory:
-    # container:
-    #   image: adoptopenjdk:11
-    #   options: --ulimit core=-1 --ulimit memlock=-1:-1
     runs-on: ubuntu-latest
     steps:
     - name: Checkout the repository
@@ -34,14 +31,10 @@ jobs:
     - name: Test
       run: |
         ulimit -c unlimited
-        ulimit -l unlimited
         cd java/secure-memory
         ./scripts/test.sh
   app-encryption:
     needs: secure-memory
-    # container:
-    #   image: adoptopenjdk:11
-    #   options: --ulimit core=-1 --ulimit memlock=-1:-1
     runs-on: ubuntu-latest
     steps:
     - name: Checkout the repository
@@ -65,7 +58,6 @@ jobs:
     - name: Test
       run: |
         ulimit -c unlimited
-        ulimit -l unlimited
         source ./.github/workflows/set_env_variables.sh
         cd java/app-encryption
         ./scripts/integration_test.sh
