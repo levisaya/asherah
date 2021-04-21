@@ -8,6 +8,8 @@ on:
 
 jobs:
   secure-memory:
+    container:
+      options: --ulimit core=-1 --ulimit memlock=-1:-1
     runs-on: ubuntu-latest
     steps:
     - name: Checkout the repository
@@ -34,6 +36,8 @@ jobs:
         ./scripts/test.sh
   app-encryption:
     needs: secure-memory
+    container:
+      options: --ulimit core=-1 --ulimit memlock=-1:-1
     runs-on: ubuntu-latest
     steps:
     - name: Checkout the repository
