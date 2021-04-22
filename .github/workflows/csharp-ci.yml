@@ -84,16 +84,16 @@ jobs:
         cd csharp/AppEncryption
         ./scripts/clean.sh
         ./scripts/build.sh
-    - name: Test
+    - name: Unit tests
       run: |
         . ./.github/workflows/set_env_variables.sh
         cd csharp/AppEncryption
         ./scripts/test.sh
-    - name: Integration tests
-      run: |
-        . ./.github/workflows/set_env_variables.sh
-        cd csharp/AppEncryption
-        ./scripts/integration_test.sh
+    # - name: Integration tests
+    #   run: |
+    #     . ./.github/workflows/set_env_variables.sh
+    #     cd csharp/AppEncryption
+    #     ./scripts/integration_test.sh
   reference-app:
     needs: app-encryption
     runs-on: ubuntu-latest
