@@ -6,6 +6,19 @@ on:
   pull_request:
     branches: [ master ]
 
+#### Global environment variables
+env:
+  DYNAMODB_HOSTNAME: dynamodb
+  MYSQL_HOSTNAME: mysql
+  MYSQL_DBNAME: testdb
+  MYSQL_USERNAME: root
+  MYSQL_PASSWORD: Password123
+  DISABLE_TESTCONTAINERS: true
+  AWS_ACCESS_KEY_ID: dummy_key
+  AWS_SECRET_ACCESS_KEY: dummy_secret
+  AWS_DEFAULT_REGION: us-west-2
+  AWS_REGION: us-west-2
+
 jobs:
   #### Java
   java-secure-memory:
@@ -56,12 +69,10 @@ jobs:
         ./scripts/build.sh
     - name: Unit tests
       run: |
-        . ./.github/workflows/set_env_variables.sh
         cd java/app-encryption
         ./scripts/test.sh
     - name: Integration tests
       run: |
-        . ./.github/workflows/set_env_variables.sh
         cd java/app-encryption
         ./scripts/integration_test.sh
 
@@ -110,7 +121,6 @@ jobs:
         ./scripts/build.sh
     - name: Unit tests
       run: |
-        . ./.github/workflows/set_env_variables.sh
         cd server/java
         ./scripts/test.sh
 
@@ -181,7 +191,7 @@ jobs:
       mysql:
         image: mysql:5.7
         env:
-          MYSQL_ROOT_PASSWORD: Password123
+          MYSQL_ROOT_PASSWORD: ${{ env.MYSQL_PASSWORD }}
     steps:
     - name: Checkout the repository
       uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
@@ -199,12 +209,10 @@ jobs:
         ./scripts/build.sh
     - name: Unit tests
       run: |
-        . ./.github/workflows/set_env_variables.sh
         cd csharp/AppEncryption
         ./scripts/test.sh
     # - name: Integration tests
     #   run: |
-    #     . ./.github/workflows/set_env_variables.sh
     #     cd csharp/AppEncryption
     #     ./scripts/integration_test.sh
 
@@ -296,7 +304,6 @@ jobs:
         ./scripts/build.sh
     - name: Unit tests
       run: |
-        . ./.github/workflows/set_env_variables.sh
         cd go/appencryption
         ./scripts/test.sh
     - name: Benchmark tests
