@@ -21,6 +21,8 @@ jobs:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
         restore-keys: ${{ runner.os }}-go-
+    - name: Install gotestsum
+      run: go get gotest.tools/gotestsum
     - name: Build
       run: |
         cd go/securememory
@@ -59,6 +61,8 @@ jobs:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
         restore-keys: ${{ runner.os }}-go-
+    - name: Install gotestsum
+      run: go get gotest.tools/gotestsum
     - name: Build
       run: |
         cd go/appencryption
@@ -90,6 +94,8 @@ jobs:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
         restore-keys: ${{ runner.os }}-go-
+    - name: Install gotestsum
+      run: go get gotest.tools/gotestsum
     - name: Build
       run: |
         cd samples/go/referenceapp
