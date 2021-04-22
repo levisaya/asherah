@@ -50,7 +50,12 @@ jobs:
         cd java/app-encryption
         ./scripts/clean.sh
         ./scripts/build.sh
-    - name: Test
+    - name: Unit tests
+      run: |
+        . ./.github/workflows/set_env_variables.sh
+        cd java/app-encryption
+        ./scripts/test.sh
+    - name: Integration tests
       run: |
         . ./.github/workflows/set_env_variables.sh
         cd java/app-encryption
