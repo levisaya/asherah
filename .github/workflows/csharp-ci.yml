@@ -56,3 +56,41 @@ jobs:
       run: |
         cd csharp/SecureMemory
         ./scripts/test.sh
+  app-encryption:
+    needs: secure-memory
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/dotnet/sdk:3.1
+      options: --ulimit core=-1 --ulimit memlock=-1:-1
+    services:
+      dynamodb:
+        image: amazon/dynamodb-local
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_ROOT_PASSWORD: Password123
+    steps:
+    - name: Checkout the repository
+      uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
+    - name: Cache dotnet packages
+      uses: actions/cache@1a9e2138d905efd099035b49d8b7a3888c653ca8
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget
+    - name: Build
+      run: |
+        cd csharp/AppEncryption
+        ./scripts/clean.sh
+        ./scripts/build.sh
+    - name: Test
+      run: |
+        . ./.github/workflows/set_env_variables.sh
+        cd csharp/AppEncryption
+        ./scripts/test.sh
+    - name: Integration tests
+      run: |
+        . ./.github/workflows/set_env_variables.sh
+        cd csharp/AppEncryption
+        ./scripts/integration_test.sh
