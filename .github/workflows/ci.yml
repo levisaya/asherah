@@ -87,6 +87,33 @@ jobs:
         ./scripts/clean.sh
         ./scripts/build.sh
 
+  java-server:
+    name: Java Server Implementation
+    needs: java-app-encryption
+    runs-on: ubuntu-latest
+    container:
+      image: adoptopenjdk/maven-openjdk11
+      options: --ulimit core=-1 --ulimit memlock=-1:-1
+    steps:
+    - name: Checkout the repository
+      uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
+    - name: Cache Java packages
+      uses: actions/cache@1a9e2138d905efd099035b49d8b7a3888c653ca8
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        restore-keys: ${{ runner.os }}-m2
+    - name: Build
+      run: |
+        cd server/java
+        ./scripts/clean.sh
+        ./scripts/build.sh
+    - name: Unit tests
+      run: |
+        . ./.github/workflows/set_env_variables.sh
+        cd server/java
+        ./scripts/test.sh
+
   #### C#
   csharp-logging:
     name: C# Logging
@@ -269,6 +296,7 @@ jobs:
         ./scripts/build.sh
     - name: Unit tests
       run: |
+        . ./.github/workflows/set_env_variables.sh
         cd go/appencryption
         ./scripts/test.sh
     - name: Benchmark tests
@@ -305,3 +333,53 @@ jobs:
       run: |
         cd samples/go/referenceapp
         ./scripts/lint.sh
+
+  go-server:
+    name: Go Server Implementation
+    needs: go-app-encryption
+    runs-on: ubuntu-latest
+    container:
+      image: golang:1.16
+      options: --ulimit core=-1 --ulimit memlock=-1:-1
+    steps:
+    - name: Checkout the repository
+      uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
+    - name: Cache Go packages
+      uses: actions/cache@1a9e2138d905efd099035b49d8b7a3888c653ca8
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: ${{ runner.os }}-go-
+    - name: Install gotestsum
+      run: go get gotest.tools/gotestsum
+    - name: Build
+      run: |
+        cd server/go
+        ./scripts/build.sh
+    - name: Unit tests
+      run: |
+        cd server/go
+        ./scripts/test.sh
+    - name: Static analysis
+      run: |
+        cd server/go
+        ./scripts/lint.sh
+
+  #### Cross-Language
+  server-samples:
+    name: Server Samples
+    needs: [ java-server, go-server ]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout the repository
+      uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
+    # TODO: Implement all the rest of the steps here...
+
+  tests-cross-language:
+    name: Cross-Language Tests
+    needs: [ java-app-encryption, csharp-app-encryption, go-app-encryption, java-server, go-server ]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout the repository
+      uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
+    # TODO: Implement all the rest of the steps here...
