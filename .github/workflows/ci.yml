@@ -1,0 +1,307 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  #### Java
+  java-secure-memory:
+    name: Java Secure Memory
+    runs-on: ubuntu-latest
+    container:
+      image: adoptopenjdk/maven-openjdk11
+      options: --ulimit core=-1 --ulimit memlock=-1:-1
+    steps:
+    - name: Checkout the repository
+      uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
+    - name: Cache Java packages
+      uses: actions/cache@1a9e2138d905efd099035b49d8b7a3888c653ca8
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        restore-keys: ${{ runner.os }}-m2
+    - name: Build
+      run: |
+        cd java/secure-memory
+        ./scripts/clean.sh
+        ./scripts/build.sh
+    - name: Test
+      run: |
+        cd java/secure-memory
+        ./scripts/test.sh
+
+  java-app-encryption:
+    name: Java Application Encryption
+    needs: java-secure-memory
+    runs-on: ubuntu-latest
+    container:
+      image: adoptopenjdk/maven-openjdk11
+      options: --ulimit core=-1 --ulimit memlock=-1:-1
+    steps:
+    - name: Checkout the repository
+      uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
+    - name: Cache Java packages
+      uses: actions/cache@1a9e2138d905efd099035b49d8b7a3888c653ca8
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        restore-keys: ${{ runner.os }}-m2
+    - name: Build
+      run: |
+        cd java/app-encryption
+        ./scripts/clean.sh
+        ./scripts/build.sh
+    - name: Unit tests
+      run: |
+        . ./.github/workflows/set_env_variables.sh
+        cd java/app-encryption
+        ./scripts/test.sh
+    - name: Integration tests
+      run: |
+        . ./.github/workflows/set_env_variables.sh
+        cd java/app-encryption
+        ./scripts/integration_test.sh
+
+  java-reference-app:
+    name: Java Reference Application
+    needs: java-app-encryption
+    runs-on: ubuntu-latest
+    container:
+      image: adoptopenjdk/maven-openjdk11
+      options: --ulimit core=-1 --ulimit memlock=-1:-1
+    steps:
+    - name: Checkout the repository
+      uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
+    - name: Cache Java packages
+      uses: actions/cache@1a9e2138d905efd099035b49d8b7a3888c653ca8
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        restore-keys: ${{ runner.os }}-m2
+    - name: Build
+      run: |
+        cd samples/java/reference-app
+        ./scripts/clean.sh
+        ./scripts/build.sh
+
+  #### C#
+  csharp-logging:
+    name: C# Logging
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/dotnet/sdk:3.1
+      options: --ulimit core=-1 --ulimit memlock=-1:-1
+    steps:
+    - name: Checkout the repository
+      uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
+    - name: Cache dotnet packages
+      uses: actions/cache@1a9e2138d905efd099035b49d8b7a3888c653ca8
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget
+    - name: Build
+      run: |
+        cd csharp/Logging
+        ./scripts/clean.sh
+        ./scripts/build.sh
+    - name: Test
+      run: |
+        cd csharp/Logging
+        ./scripts/test.sh
+
+  csharp-secure-memory:
+    name: C# Secure Memory
+    needs: csharp-logging
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/dotnet/sdk:3.1
+      options: --ulimit core=-1 --ulimit memlock=-1:-1
+    steps:
+    - name: Checkout the repository
+      uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
+    - name: Cache dotnet packages
+      uses: actions/cache@1a9e2138d905efd099035b49d8b7a3888c653ca8
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget
+    - name: Build
+      run: |
+        cd csharp/SecureMemory
+        ./scripts/clean.sh
+        ./scripts/build.sh
+    - name: Test
+      run: |
+        cd csharp/SecureMemory
+        ./scripts/test.sh
+
+  csharp-app-encryption:
+    name: C# Application Encryption
+    needs: csharp-secure-memory
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/dotnet/sdk:3.1
+      options: --ulimit core=-1 --ulimit memlock=-1:-1
+    services:
+      dynamodb:
+        image: amazon/dynamodb-local
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_ROOT_PASSWORD: Password123
+    steps:
+    - name: Checkout the repository
+      uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
+    - name: Cache dotnet packages
+      uses: actions/cache@1a9e2138d905efd099035b49d8b7a3888c653ca8
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget
+    - name: Build
+      run: |
+        cd csharp/AppEncryption
+        ./scripts/clean.sh
+        ./scripts/build.sh
+    - name: Unit tests
+      run: |
+        . ./.github/workflows/set_env_variables.sh
+        cd csharp/AppEncryption
+        ./scripts/test.sh
+    # - name: Integration tests
+    #   run: |
+    #     . ./.github/workflows/set_env_variables.sh
+    #     cd csharp/AppEncryption
+    #     ./scripts/integration_test.sh
+
+  csharp-reference-app:
+    name: C# Reference Application
+    needs: csharp-app-encryption
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/dotnet/sdk:3.1
+      options: --ulimit core=-1 --ulimit memlock=-1:-1
+    steps:
+    - name: Checkout the repository
+      uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
+    - name: Cache dotnet packages
+      uses: actions/cache@1a9e2138d905efd099035b49d8b7a3888c653ca8
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget
+    - name: Build
+      run: |
+        cd samples/csharp/ReferenceApp
+        ./scripts/clean.sh
+        ./scripts/build.sh
+
+  #### Go
+  go-secure-memory:
+    name: Go Secure Memory
+    runs-on: ubuntu-latest
+    container:
+      image: golang:1.16
+      options: --ulimit core=-1 --ulimit memlock=-1:-1
+    steps:
+    - name: Checkout the repository
+      uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
+    - name: Cache Go packages
+      uses: actions/cache@1a9e2138d905efd099035b49d8b7a3888c653ca8
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: ${{ runner.os }}-go-
+    - name: Install gotestsum
+      run: go get gotest.tools/gotestsum
+    - name: Build
+      run: |
+        cd go/securememory
+        ./scripts/build.sh
+    - name: Unit tests
+      run: |
+        cd go/securememory
+        ./scripts/test.sh
+    - name: Benchmark tests
+      run: |
+        cd go/securememory
+        ./scripts/benchmark_test.sh
+    - name: Static analysis
+      run: |
+        cd go/securememory
+        ./scripts/lint.sh
+  go-app-encryption:
+    name: Go Application Encryption
+    needs: go-secure-memory
+    runs-on: ubuntu-latest
+    container:
+      image: golang:1.16
+      options: --ulimit core=-1 --ulimit memlock=-1:-1
+    services:
+      dynamodb:
+        image: amazon/dynamodb-local
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_ROOT_PASSWORD: Password123
+    steps:
+    - name: Checkout the repository
+      uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
+    - name: Cache Go packages
+      uses: actions/cache@1a9e2138d905efd099035b49d8b7a3888c653ca8
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: ${{ runner.os }}-go-
+    - name: Install gotestsum
+      run: go get gotest.tools/gotestsum
+    - name: Build
+      run: |
+        cd go/appencryption
+        ./scripts/build.sh
+    - name: Unit tests
+      run: |
+        cd go/appencryption
+        ./scripts/test.sh
+    - name: Benchmark tests
+      run: |
+        cd go/appencryption
+        ./scripts/benchmark_test.sh
+    - name: Static analysis
+      run: |
+        cd go/appencryption
+        ./scripts/lint.sh
+  go-reference-app:
+    name: Go Reference Application
+    needs: go-app-encryption
+    runs-on: ubuntu-latest
+    container:
+      image: golang:1.16
+      options: --ulimit core=-1 --ulimit memlock=-1:-1
+    steps:
+    - name: Checkout the repository
+      uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
+    - name: Cache Go packages
+      uses: actions/cache@1a9e2138d905efd099035b49d8b7a3888c653ca8
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: ${{ runner.os }}-go-
+    - name: Install gotestsum
+      run: go get gotest.tools/gotestsum
+    - name: Build
+      run: |
+        cd samples/go/referenceapp
+        ./scripts/build.sh
+    - name: Static analysis
+      run: |
+        cd samples/go/referenceapp
+        ./scripts/lint.sh
