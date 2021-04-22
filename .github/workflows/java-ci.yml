@@ -62,6 +62,6 @@ jobs:
         ./scripts/build.sh
     - name: Test
       run: |
-        source ./.github/workflows/set_env_variables.sh
+        . ./.github/workflows/set_env_variables.sh
         cd java/app-encryption
         ./scripts/integration_test.sh
