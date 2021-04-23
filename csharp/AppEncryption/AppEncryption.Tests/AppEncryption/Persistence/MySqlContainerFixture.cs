@@ -8,8 +8,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
 {
     public class MySqlContainerFixture : IAsyncLifetime
     {
-        private const string LocalHost = "server=localhost;";
-        private const string LocalConnectionString = "uid=root;pwd=Password123;sslmode=none;";
+        private const string LocalConnectionString = "server=localhost;uid=root;pwd=Password123;sslmode=none;";
         private readonly bool disableTestContainers;
 
         public MySqlContainerFixture()
@@ -18,15 +17,7 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
 
             if (disableTestContainers)
             {
-                string hostname = Environment.GetEnvironmentVariable("MYSQL_HOSTNAME");
-                if (hostname.Length == 0)
-                {
-                    ConnectionString = LocalHost + LocalConnectionString;
-                }
-                else
-                {
-                    ConnectionString = "server=" + hostname + ";" + LocalConnectionString;
-                }
+                ConnectionString = LocalConnectionString;
             }
             else
             {
