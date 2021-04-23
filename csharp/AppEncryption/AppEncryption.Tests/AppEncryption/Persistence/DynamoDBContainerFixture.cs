@@ -17,7 +17,15 @@ namespace GoDaddy.Asherah.AppEncryption.Tests.AppEncryption.Persistence
 
             if (disableTestContainers)
             {
-                ServiceUrl = LocalServiceUrl;
+                string hostname = Environment.GetEnvironmentVariable("DYNAMODB_HOSTNAME");
+                if (hostname.Length == 0)
+                {
+                    ServiceUrl = LocalServiceUrl;
+                }
+                else
+                {
+                    ServiceUrl = $"http://{hostname}:8000";
+                }
             }
             else
             {
